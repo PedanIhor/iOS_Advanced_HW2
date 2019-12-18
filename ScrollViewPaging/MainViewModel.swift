@@ -15,6 +15,7 @@ final class MainViewModel: ObservableObject {
   @Published var searchKey: String = ""
   @Published var pageNumber: Int = 1
   @Published var isLoadingPage = false
+  @Published var selectedScope: SearchBar.Scope = .swiftUI
   
   init(newsService: NewsServiceInput) {
     self.newsService = newsService
@@ -29,9 +30,6 @@ final class MainViewModel: ObservableObject {
     isLoadingPage = true
     pageNumber = 1
     newsService.loadNewsForKey(searchKey, page: pageNumber) { [weak self] (result) in
-      defer {
-        self?.isLoadingPage = false
-      }
       guard let self = self else { return }
       switch result {
       case .success(let list):
@@ -39,24 +37,25 @@ final class MainViewModel: ObservableObject {
       case .failure(let error):
         print(error)
       }
+      self.isLoadingPage = false
     }
   }
   
-  func loadNewPage() {
+  func loadNewPage(_ success: (([Article]) -> Void)? = nil) {
     guard !isLoadingPage else { return }
     isLoadingPage = true
     pageNumber += 1
     newsService.loadNewsForKey(searchKey, page: pageNumber) { [weak self] (result) in
-      defer {
-        self?.isLoadingPage = false
+      guard let self = self else {
+        return
       }
-      guard let self = self else { return }
       switch result {
       case .success(let list):
         self.articles.append(contentsOf: list)
       case .failure(let error):
         print(error)
       }
+      self.isLoadingPage = false
     }
   }
 }

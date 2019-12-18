@@ -16,40 +16,32 @@ struct MainView: View {
   var body: some View {
     let searchKeyBind = Binding(get: { self.viewModel.searchKey },
                                 set: { self.viewModel.searchKey = $0 })
+    let selectedScopeBind = Binding(get: { self.viewModel.selectedScope },
+                                    set: { self.viewModel.selectedScope = $0 })
     let isLoadingBind = Binding(get: { self.viewModel.isLoadingPage },
                                 set: { self.viewModel.isLoadingPage = $0 })
     return NavigationView {
       VStack {
-        SearchBar(text: searchKeyBind) {
-            self.viewModel.performSearch()
+        SearchBar(text: searchKeyBind, selectedScope: selectedScopeBind) {
+          self.viewModel.performSearch()
         }
-        List(viewModel.articles) { article in
-          VStack {
-            Text(article.title ?? "Untitled")
-            if self.viewModel.isLoadingPage && self.viewModel.articles.isLastItem(article) {
-              Divider()
-              ActivityIndicator(isAnimating: isLoadingBind)
-            }
-          }.onAppear {
-            self.onItemShowed(article)
-          }
-        }
-      }.navigationBarTitle("News")
+        listView()
+      }
+      .navigationBarItems(trailing: ActivityIndicator(isAnimating: isLoadingBind))
+      .navigationBarTitle("News")
     }
   }
 }
 
 extension MainView {
-  func onItemShowed<T: Identifiable>(_ item: T) {
-    if viewModel.articles.isLastItem(item) {
-      viewModel.loadNewPage()
+  private func listView() -> AnyView {
+    switch viewModel.selectedScope {
+    case .swiftUI:
+      return AnyView(ListView().environmentObject(viewModel))
+    case .uiKit:
+      return AnyView(TableView().environmentObject(viewModel))
     }
   }
-}
-
-// MARK: - Article+Identifiable
-extension Article: Identifiable {
-  public var id: String { url ?? title ?? "" }
 }
 
 // MARK: - Preview

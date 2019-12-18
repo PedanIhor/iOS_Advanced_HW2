@@ -14,6 +14,7 @@ struct ActivityIndicator: UIViewRepresentable {
   
   func makeUIView(context: Context) -> UIActivityIndicatorView {
     let v = UIActivityIndicatorView(style: .medium)
+    v.hidesWhenStopped = true
     return v
   }
   
